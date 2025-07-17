@@ -32,7 +32,7 @@ dependencies = [
 ]
 
 [tool.setuptools.packages.find]
-where = ["."]  # list of folders that contain the packages (["."] by default)
+where = ["src"]  # list of folders that contain the packages (["."] by default)
 include = ["kivi*"]  # package names should match these glob patterns (["*"] by default)
 
 [tool.setuptools_scm]
