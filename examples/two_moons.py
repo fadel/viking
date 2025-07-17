@@ -197,6 +197,7 @@ def plot_posterior_samples(title, ax1, ax2, x, posterior, pos_samples):
     plt.colorbar(m)
 
     text_color = matplotlib.rcParams["text.color"]
+    background_color = matplotlib.rcParams["axes.facecolor"]
     num_pos_samples = pos_samples.kernel.shape[0]
     ax = ax2
     ax.set_xticks([])
@@ -225,8 +226,8 @@ def plot_posterior_samples(title, ax1, ax2, x, posterior, pos_samples):
             x[:, 0],
             x[:, 1],
             color=text_color,
+            edgecolor=background_color,
             alpha=0.8,
-            lw=0,
         )
     plt.savefig("two_moons.svg", bbox_inches="tight")
 
