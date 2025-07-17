@@ -230,13 +230,13 @@ def parse_args():
         "--num-mc-samples",
         type=int,
         default=20,
-        help="(training) Number of samples drawn to estimate the expectation term of ELBO",
+        help="Number of posterior samples drawn (in training) to estimate the expectation term of ELBO",
     )
     parser.add_argument(
         "--num-eval-mc-samples",
         type=int,
         default=100,
-        help="Number of samples drawn from posterior for evaluation",
+        help="Number of posterior samples drawn for evaluation",
     )
     parser.add_argument("--beta", type=float, default=1.0)
     parser.add_argument(
