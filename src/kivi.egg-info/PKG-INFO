@@ -1,0 +1,38 @@
+Metadata-Version: 2.4
+Name: kivi
+Version: 0.0.1
+Summary: Kernel-Image Variational Inference
+Author: KIVI authors
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: equinox>=0.12.1
+Requires-Dist: jax>=0.5.3
+Requires-Dist: jaxopt
+Requires-Dist: lpips_j
+Requires-Dist: matplotlib
+Requires-Dist: optax>=0.1.9
+Requires-Dist: pre-commit
+Requires-Dist: pytest
+Requires-Dist: pytest_cases
+Requires-Dist: tqdm
+
+# 🥝 Kernel-Image Variational Inference (KIVI)
+
+This Python package implements [KIVI] with a friendly API.
+
+![Example plot on two moons data](examples/two_moons.svg)
+
+## Documentation
+
+Coming soon!
+
+## Examples
+
+The `examples/` directory contains a few examples implementing the method, including the one that produces the picture above. After installing the project dependencies, the scripts can be run directly from a command line without arguments, but command-line options are available to tweak the models and KIVI.
+
+[KIVI]: coming-soon

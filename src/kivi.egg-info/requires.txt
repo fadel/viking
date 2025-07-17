@@ -1,0 +1,10 @@
+equinox>=0.12.1
+jax>=0.5.3
+jaxopt
+lpips_j
+matplotlib
+optax>=0.1.9
+pre-commit
+pytest
+pytest_cases
+tqdm
