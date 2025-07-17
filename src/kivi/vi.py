@@ -22,6 +22,7 @@ ELBOInfo = collections.namedtuple(
 
 
 def elbo_kldiv(param_nn: jax.Array, log_precision, log_scale_image, *, R, D):
+    """The Kullback-Leibler divergence for the KIVI ELBO."""
     alpha_tr_sigma = (
         R + jnp.exp(log_precision) * (D - R) * jnp.exp(log_scale_image) ** 2
     )
@@ -37,6 +38,7 @@ def elbo_kldiv(param_nn: jax.Array, log_precision, log_scale_image, *, R, D):
 
 
 def make_elbo(loss_fn):
+    """This wraps a target loss function into the KIVI ELBO loss."""
     def elbo_loss(posterior, x, y, *, key, num_mc_samples=1):
         def logpdf(outputs):
             return loss_fn(outputs, y)
@@ -88,6 +90,10 @@ def make_elbo(loss_fn):
 
 
 def make_train_step(value_and_grad_fn, optimizer, apply_updates_fn, num_mc_samples=1):
+    """
+    A utility function that computes the gradients, updates the
+    model and optimiser, and returns the outcome of those operations.
+    """
     def train_step(posterior, opt_state, inputs, labels, *, key):
         out, loss_grad = value_and_grad_fn(
             posterior, x=inputs, y=labels, key=key, num_mc_samples=num_mc_samples
