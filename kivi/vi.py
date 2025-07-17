@@ -2,8 +2,6 @@
 #               evaluation modes (e.g., for dropout, batchnorm)
 
 import collections
-import functools as ft
-import optax
 from typing import Any, Callable
 
 import equinox as eqx
@@ -89,16 +87,14 @@ def make_elbo(loss_fn):
     return elbo_loss
 
 
-def make_train_step(elbo_loss_fn, optimizer, num_mc_samples=1):
-    value_and_grad_fn = eqx.filter_value_and_grad(elbo_loss_fn, has_aux=True)
-
+def make_train_step(value_and_grad_fn, optimizer, apply_updates_fn, num_mc_samples=1):
     def train_step(posterior, opt_state, inputs, labels, *, key):
-        (loss_value, info), loss_grad = value_and_grad_fn(
+        out, loss_grad = value_and_grad_fn(
             posterior, x=inputs, y=labels, key=key, num_mc_samples=num_mc_samples
         )
         updates, opt_state = optimizer.update(loss_grad, opt_state, posterior)
-        posterior = eqx.apply_updates(posterior, updates)
-        return loss_value, info, posterior, opt_state
+        posterior = apply_updates_fn(posterior, updates)
+        return out, posterior, opt_state
 
     return train_step
 

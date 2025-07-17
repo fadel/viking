@@ -10,47 +10,33 @@ authors = [
 ]
 description = "Kernel-Image Variational Inference"
 readme = "README.md"
-requires-python=">=3.10"
+requires-python=">=3.11"
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
     "equinox>=0.12.1",
-    "flax",
     "jax>=0.5.3",
     "jaxopt",
-    "jupyter",
     "lpips_j",
-    "matfree",
     "matplotlib",
-    "optax",
+    "optax>=0.1.9",
     "pre-commit",
     "pytest",
     "pytest_cases",
-    "python-dotenv>=1.1.0",
-    "scikit-learn",
     "tqdm",
 ]
-
-
 
 [tool.setuptools.packages.find]
 where = ["."]  # list of folders that contain the packages (["."] by default)
 include = ["kivi*"]  # package names should match these glob patterns (["*"] by default)
 
-
 [tool.setuptools_scm]
 version_file = "src/kivi/_version.py"
-
-# Disable notebook support because if we auto-format notebooks while they're open,
-# weird things happen
-[tool.ruff]
-extend-exclude = ["*.ipynb"]
 
 [tool.ruff.lint]
 # Enable import-sorting
