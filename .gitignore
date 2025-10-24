@@ -1,0 +1,10 @@
+*.py[codz]
+__pycache__/
+*.egg-info/
+build/
+
+# Common (virtual) environment paths
+.envrc
+.env/
+.venv/
+venv/

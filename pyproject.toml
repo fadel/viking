@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "viking"
+version = "0.0.1"
+authors = [
+    {name="VIKING authors"}
+]
+description = "VIKING: Deep variational inference with stochastic projections"
+readme = "README.md"
+requires-python=">=3.12"
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "jax>=0.5.3",
+    "matfree>=0.4.0",
+    "optax>=0.1.9",
+]
+
+[project.optional-dependencies]
+test = [
+    "equinox>=0.12.1",
+    "matplotlib",
+    "pre-commit",
+    "pytest",
+    "pytest_cases",
+    "tqdm",
+]
+format-and-lint = [
+    "viking[test]",
+    "pre-commit",
+]
+doc = [
+    "matplotlib",
+    "sphinx",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]  # list of folders that contain the packages (["."] by default)
+include = ["viking*"]  # package names should match these glob patterns (["*"] by default)
+
+[tool.setuptools_scm]
+version_file = "src/viking/_version.py"
+
+[tool.ruff.format]
+line-ending = "lf"
+quote-style = "double"
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
+
+[tool.ruff.lint]
+# Enable import-sorting
+extend-select = ["I"]
+# Ignore E731 (Do not assign a `lambda` expression, use a `def`)
+ignore = ["E731"]

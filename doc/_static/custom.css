@@ -1,0 +1,314 @@
+:root {
+    --red: #b66;
+    --red-semi: #b668;
+    --orange: #d87;
+    --orange-semi: #d878;
+    --yellow: #ec8;
+    --yellow-semi: #ec88;
+    --green: #ab8;
+    --green-semi: #ab88;
+    --purple: #b8a;
+    --purple-semi: #b8a8;
+    --blue: #58a;
+    --blue-semi: #58a8;
+    --white: #fff;
+    --black: #000;
+    color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        --text-color: #333;
+        --text-secondary-color: #999;
+        --background-color: #eee;
+        --background-faded-color: #ddd;
+        --background-intense-color: #ccc;
+        --link-color: #368;
+        --link-hover-color: #58a;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --text-color: #ddd;
+        --text-secondary-color: #999;
+        --background-color: #111;
+        --background-faded-color: #222;
+        --background-intense-color: #333;
+        --link-color: #58a;
+        --link-hover-color: #7ac;
+    }
+}
+
+body {
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 100%;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    line-height: 2rem;
+    margin: 2.5rem 0;
+}
+
+a, a:visited {
+    color: var(--link-color);
+}
+
+a:hover,
+a:active {
+    color: var(--link-hover-color);
+}
+
+div.related,
+div.document,
+div.footer {
+    margin: 0 auto;
+    max-width: 60em;
+    width: 90%;
+    color: var(--text-color);
+}
+
+div.sphinxsidebar {
+    background-color: var(--background-faded-color);
+    font-size: 100%;
+    width: 100%;
+    margin: 0;
+    overflow: auto;
+}
+
+div.sphinxsidebar ul {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+div.sphinxsidebar ul ul {
+    margin-left: 1rem;
+}
+
+div.sphinxsidebar ul.current li.current > a {
+    color: var(--text-color);
+    text-decoration: none;
+}
+
+div.sphinxsidebarwrapper {
+    padding: 1rem 2rem;
+}
+
+div.sphinxsidebar li.toctree-l1 {
+    margin: 0 -2rem;
+    padding: 0 2rem;
+}
+
+div.sphinxsidebar li.toctree-l1:hover {
+    background-color: var(--background-intense-color);
+}
+
+form input,
+form.search input {
+    border: 0;
+}
+
+form input[type="text"],
+form.search input[type="text"] {
+    color: var(--text-color);
+    background-color: var(--background-color);
+}
+
+form input[type="submit"],
+form.search input[type="submit"] {
+    color: var(--white);
+    background-color: var(--link-color);
+}
+
+form input[type="text"] {
+    background-color: var(--background-intense-color);
+}
+
+div.footer {
+    color: var(--text-secondary-color);
+    text-align: right;
+}
+
+div.related ul {
+    font-size: 0;
+}
+
+div.related ul li.nav-item {
+    font-size: initial;
+    padding: 0.2rem 0.5rem;
+}
+
+div.related ul li.right {
+    display: none;
+}
+
+div.related a,
+div.footer a {
+    color: var(--text-secondary-color);
+}
+
+div.related a:hover,
+div.footer a:hover {
+    color: var(--text-color);
+}
+
+div.modindex-jumpbox,
+div.genindex-jumpbox {
+    border: 0;
+    background-color: var(--background-faded-color);
+}
+
+p.caption > span.caption-text {
+    font-weight: bold;
+}
+
+div.highlight {
+    padding: 1rem;
+}
+
+em.property {
+    opacity: 0.5;
+}
+
+dl.class > dt.sig,
+dl.function > dt.sig {
+    background-color: var(--background-faded-color);
+    border-left-width: 0.25rem;
+    border-left-style: solid;
+    padding-left: 0.5rem;
+}
+
+dl.class > dt.sig { border-left-color: var(--green); }
+dl.function > dt.sig { border-left-color: var(--blue); }
+
+dl.attribute > dt.sig {
+    background-color: var(--background-faded-color);
+    border-left: 0.25rem solid var(--background-intense-color);
+    padding-left: 0.5rem;
+}
+
+dt:target,
+.highlighted {
+    border-left-color: var(--yellow) !important;
+    background-color: var(--yellow-semi) !important;
+    color: var(--text-color) !important;
+}
+
+dt:target a,
+dt:target a:visited,
+.highlighted a,
+.highlighted a:visited {
+    color: var(--text-color);
+}
+
+/*
+ * Replaces the "[source]" link text from sphinx.ext.viewcode with a
+ * clickable square.
+ */
+
+/* First no "[source]" link text. */
+a .viewcode-link .pre {
+  font-size: 0;
+}
+
+/* Now the square. */
+a .viewcode-link .pre:before {
+  content: "+";
+  font-size: initial;
+  background-color: var(--text-color);
+  color: var(--background-color);
+  display: inline-block;
+  line-height: 0.75rem;
+  width: 0.75rem;
+  text-align: center;
+}
+
+.footnote:target {
+    background-color: unset;
+    border-left: 0.25rem solid var(--yellow);
+    padding-left: 0.5rem;
+}
+
+div.admonition {
+    background-color: var(--background-faded-color);
+    border-top-width: 0.25rem;
+    border-top-style: solid;
+    border-top-color: var(--background-intense-color);
+    padding: 1rem 1.5rem;
+}
+
+div.admonition.caution {
+    border-top-color: var(--orange);
+}
+
+p.admonition-title {
+    margin: 0;
+}
+
+.body code.docutils.literal {
+    border: 0.1rem solid var(--background-faded-color);
+    padding: 0.25rem 0.5rem;
+}
+
+div.highlight {
+    border: 0.1rem solid var(--background-faded-color);
+    background-color: var(--background-color);
+}
+
+/* Comment-related */
+div.highlight .c,
+div.highlight .c1,
+div.highlight .ch,
+div.highlight .cm,
+div.highlight .cs,
+div.highlight .sh {
+    color: var(--green);
+}
+
+div.highlight .sd {
+    color: var(--purple);
+}
+
+/* String-related */
+div.highlight .dl,
+div.highlight .sa,
+div.highlight .sb,
+div.highlight .sc,
+div.highlight .s2,
+div.highlight .se {
+    color: var(--red);
+}
+
+/* Literals (numbers) */
+div.highlight .mf,
+div.highlight .mi {
+    color: var(--blue);
+}
+
+/* Non-word operators */
+div.highlight .o {
+    opacity: 0.5;
+}
+
+table.indextable tr.cap {
+    background-color: var(--background-faded-color);
+}
+
+@media (min-width: 60em) {
+    div.related,
+    div.document,
+    div.footer {
+        margin: 0 auto 0 30%;
+        max-width: 65%;
+    }
+
+    div.sphinxsidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 27.5%;
+        min-width: 15em;
+        border-right: 1px solid var(--background-intense-color);
+    }
+}
