@@ -4,9 +4,7 @@ This Python package implements [VIKING], a variational inference method for buil
 
 The library is designed to be agnostic to the neural network implementation. You should be able to use it with your favorite neural network library and the usual JAX transformations (`jax.jit`, `jax.vmap`).
 
-## Documentation
-
-Coming soon!
+## [Documentation](https://samuel.nihil.ws/viking/docs/)
 
 ## Examples
 
@@ -26,5 +24,5 @@ This builds a VIKING approximate posterior of an MLP using [Equinox]. This inclu
 
 ![Example plot on two moons data](examples/two_moons.svg)
 
-[VIKING]: coming-soon
+[VIKING]: https://arxiv.org/abs/2510.23684
 [Equinox]: https://docs.kidger.site/equinox/

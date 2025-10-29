@@ -5,14 +5,7 @@ Variational Inference with Kernel- and Image-spaces of numerical Gauss--Newton m
 
 This library implements Variational Inference with Kernel- and Image-spaces of numerical Gauss--Newton matrices [VIKING]_.
 
-.. [VIKING] Paper coming soon
-
-.. toctree::
-   :caption: Tutorials
-   :maxdepth: 1
-   :glob:
-
-   tutorial_*
+.. [VIKING] https://arxiv.org/abs/2510.23684
 
 .. toctree::
    :caption: API reference
