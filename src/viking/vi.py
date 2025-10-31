@@ -35,7 +35,7 @@ class ELBOInfo(NamedTuple):
     projection_rank: float
     """The estimated rank of the kernel (null) space."""
 
-    samples: jax.Array
+    samples: PosteriorSamples
     """The posterior samples."""
 
 
