@@ -144,7 +144,7 @@ def make_alternating_projections(loader, projection: Callable):
     def project_batch(i, batch_carry):
         param_nn, carry_kernel_samples = batch_carry
         batch_x, batch_y = loader.dyn_batch(i)
-        est_UUt_kernel, *_ = projection(param_nn, batch_x, batch_y)
+        est_UUt_kernel = projection(param_nn, batch_x, batch_y)
         batch_kernel_samples, _ = jax.vmap(est_UUt_kernel)(carry_kernel_samples)
         return param_nn, batch_kernel_samples
 
@@ -169,7 +169,7 @@ def make_alternating_projections_from_iterator(loader, projection: Callable):
     # This will be VERY slow without jax.jit()
     @jax.jit
     def projection_iter(param_nn, samples, batch_x, batch_y):
-        est_UUt_kernel, *_ = projection(param_nn, batch_x, batch_y)
+        est_UUt_kernel = projection(param_nn, batch_x, batch_y)
         samples, _ = jax.vmap(est_UUt_kernel)(samples)
         return samples
 
