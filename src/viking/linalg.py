@@ -363,7 +363,7 @@ def projection_kernel_normaleq(
             def project_onto_kernel(vec):
                 proj_vec_augmented, info = projection_fn(param_vec, vec)
                 proj_vec = proj_vec_augmented[:D]
-                return proj_vec
+                return proj_vec, info
 
             return project_onto_kernel
 

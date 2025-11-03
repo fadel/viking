@@ -4,10 +4,10 @@ import pytest_cases
 
 from viking.linalg import (
     SolveInfo,
-    _project_normaleq,
     dense_solver_fn_cholesky,
     dense_solver_fn_eig,
     dense_solver_fn_lu,
+    _project_normaleq,
     solve_normaleq_cg,
     solve_normaleq_cg_fixed_step_reortho,
     solve_normaleq_materialize,
