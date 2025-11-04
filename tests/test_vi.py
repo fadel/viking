@@ -1,13 +1,14 @@
 from typing import NamedTuple
+
 import jax
 import jax.numpy as jnp
 import pytest_cases
 
-from viking.linalg import (
-    projection_kernel_normaleq,
-    projection_kernel_lsmr,
-)
 from viking import vi
+from viking.linalg import (
+    projection_kernel_lsmr,
+    projection_kernel_normaleq,
+)
 
 
 class ModelParams(NamedTuple):
@@ -21,7 +22,6 @@ def make_mlp():
         k_w1, k_w2, k_bias = jax.random.split(key, num=3)
         return ModelParams(
             jax.random.normal(k_w1, shape=(1, 1)),
-            # jax.random.normal(k_b1, shape=(num_hidden,)),
             jax.random.normal(k_w2, shape=(1,)),
             jax.random.normal(k_bias, shape=()),
         )
@@ -68,16 +68,15 @@ def test_posterior(projection_fn, n=5, num_samples=3):
         y_tilde = jax.vmap(
             vi.predict_from_samples, in_axes=(None, None, 0), out_axes=1
         )(posterior, samples, x)
-        # Average predictions from all posterior samples
-        return jnp.mean(y_tilde, axis=0)
+        return y_tilde
 
     # Essentially no image component: predictions should be the same
     y_tilde = y_tilde_from_posterior(log_scale_image=-16.0)
-    assert jnp.allclose(y_hat, y_tilde), "Not in kernel"
+    assert jnp.allclose(y_hat[None, ...], y_tilde), "Not in kernel"
 
     # With image component: predictions should be different
     y_tilde = y_tilde_from_posterior(log_scale_image=-2.0)
-    assert not jnp.allclose(y_hat, y_tilde).item()
+    assert not jnp.allclose(y_hat[None, ...], y_tilde).item()
 
 
 @pytest_cases.parametrize(
@@ -100,15 +99,15 @@ def test_loss_posterior(projection_fn, is_linearized, n=5, num_samples=3):
         posterior = vi.make_posterior(
             apply_fn,
             params,
-            # `log_precision` indirectly controls the bound on the
-            # variance of predictive posterior losses. See Lemma 4.3
-            # by Miani et al. (2025).
+            # `log_precision` controls the bound on the variance of
+            # predictive posterior losses. See Lemma 4.3 by Miani et
+            # al. (2025).
             #
             # Miani, M., Roy, H., & Hauberg, S. (2024). Bayes without
             # Underfitting: Fully Correlated Deep Learning Posteriors
             # via Alternating Projections. arXiv preprint
             # arXiv:2410.16901.
-            log_precision=3.0,
+            log_precision=4.0,
             log_scale_image=log_scale_image,
             projection_fn=projection_fn(),
             flatten_fn=jax.flatten_util.ravel_pytree,
@@ -121,15 +120,14 @@ def test_loss_posterior(projection_fn, is_linearized, n=5, num_samples=3):
             vi.predict_from_samples, in_axes=(None, None, 0), out_axes=1
         )(posterior, samples, x)
         losses_tilde = squared_loss(y_tilde, jnp.reshape(y, (1,) + y.shape))
-        # Average predictions from all posterior samples
-        return jnp.mean(losses_tilde, axis=0)
+        return losses_tilde
 
     # Essentially no image component: losses should be the same
     losses_tilde = losses_from_posterior(log_scale_image=-16.0)
     # We are quite liberal with the tolerances, since the bound on the
     # variance is relatively loose
-    assert jnp.allclose(losses, losses_tilde, rtol=1e-1, atol=1e-1)
+    assert jnp.allclose(losses[None, ...], losses_tilde, rtol=1e-1, atol=1e-1)
 
     # With image component: losses should be different
     losses_tilde = losses_from_posterior(log_scale_image=-2.0)
-    assert not jnp.allclose(losses, losses_tilde).item()
+    assert not jnp.allclose(losses[None, ...], losses_tilde).item()
