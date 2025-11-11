@@ -40,27 +40,26 @@ def main(args):
     print(f"Number of parameters: {D}")
 
     # %%
-    # Optimizer setup
+    # Optimiser setup
     def loss_single(pred, u):
         return -jax.scipy.stats.norm.logpdf(u, loc=pred, scale=log_scale_noise)
 
     optimizer = optax.adam(args.lr)
-    loss_fn = vi.as_elbo_loss(loss_single)
     train_step = make_train_step(
-        jax.value_and_grad(loss_fn, has_aux=True),
+        loss_single,
         optimizer=optimizer,
         num_mc_samples=args.num_mc_samples,
     )
     train_step = jax.jit(train_step)
 
     # %%
-    # Optimize ELBO
+    # Optimise ELBO
     opt_state = optimizer.init(posterior)
-    with tqdm.trange(args.epochs_elbo, disable=not args.plot) as progressbar:
+    with tqdm.trange(args.num_epochs, disable=not args.plot) as progressbar:
         for step_elbo in progressbar:
             key, subkey = jax.random.split(key)
             try:
-                (loss_value, info), posterior, opt_state = train_step(
+                posterior, (info, opt_state) = train_step(
                     posterior,
                     opt_state,
                     x,
@@ -96,9 +95,7 @@ def main(args):
         ax[1].grid(which="major", axis="y", alpha=0.75, ls=":")
 
         # Plot samples from the variational approximation
-        y_preds = jax.vmap(
-            vi.predict_from_samples, in_axes=(None, None, 0), out_axes=-1
-        )(posterior, pos_samples, x_eval)
+        y_preds = vi.predict_on_batch(posterior, pos_samples, x_eval)
         for y_pred in y_preds:
             ax[0].plot(x_eval, y_pred, alpha=0.1, color="C0", linewidth=1)
 
@@ -162,9 +159,12 @@ def make_mlp(num_hidden):
     return init_fn, apply_fn
 
 
-def make_train_step(value_and_grad_fn, optimizer, num_mc_samples=1):
+def make_train_step(loss_fn, optimizer, num_mc_samples=1):
+    elbo_loss_fn = vi.as_elbo_loss(loss_fn, is_batched=False)
+    value_and_grad_fn = jax.value_and_grad(elbo_loss_fn, has_aux=True)
+
     def train_step(posterior, opt_state, inputs, targets, *, key):
-        out, loss_grad = value_and_grad_fn(
+        (loss_value, info), loss_grad = value_and_grad_fn(
             posterior,
             inputs=inputs,
             targets=targets,
@@ -173,7 +173,7 @@ def make_train_step(value_and_grad_fn, optimizer, num_mc_samples=1):
         )
         updates, opt_state = optimizer.update(loss_grad, opt_state, posterior)
         posterior = optax.apply_updates(posterior, updates)
-        return out, posterior, opt_state
+        return posterior, (info, opt_state)
 
     return train_step
 
@@ -208,7 +208,7 @@ def parse_args(argv=None):
         "--num-hidden", type=int, default=8, help="Number of hidden units in the MLP"
     )
     parser.add_argument("--lr", type=float, default=1e-2)
-    parser.add_argument("--epochs-elbo", type=int, default=3_000)
+    parser.add_argument("--num-epochs", type=int, default=3_000)
     parser.add_argument(
         "--num-mc-samples",
         type=int,

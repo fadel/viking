@@ -5,7 +5,8 @@ derivatives via [adjoints]_ and various implementations of solvers.
 .. [adjoints] https://arxiv.org/abs/1905.00578
 """
 
-from typing import Callable, NamedTuple
+from collections.abc import Callable
+from typing import NamedTuple
 
 import jax
 import jax.numpy as jnp
@@ -326,16 +327,16 @@ def projection_kernel_normaleq(
       problems and model sizes.
 
       For additional diagnosis, you can use information from the
-      solver (see :py:class:`SolveInfo`) and, for example, ensure
+      solver (see :class:`SolveInfo`) and, for example, ensure
       kernel and image samples are orthogonal (see
-      :py:class:`viking.vi.ELBOInfo`).
+      :class:`viking.vi.ELBOInfo`).
 
     Args:
       solve_normaleq: One of the ``solve_normaleq_`` variants.
 
     Returns:
       A function to be passed on to the ``projection_fn`` argument of
-      :py:func:`viking.vi.make_posterior`.
+      :func:`viking.vi.make_posterior`.
     """
 
     def projection_kernel(
@@ -377,7 +378,7 @@ def projection_kernel_lsmr(
 ):
     """
     Projects onto the kernel (null) space of the GGN matrix using the
-    LSMR solver from [matfree]_ (:py:func:`matfree.lstsq.lsmr`).
+    LSMR solver from [matfree]_ (:func:`matfree.lstsq.lsmr`).
 
     Args:
       lsmr_kwargs: These are passed unchanged onto the initializer of
@@ -386,7 +387,7 @@ def projection_kernel_lsmr(
 
     Returns:
       A function to be passed on to the ``projection_fn`` argument of
-      :py:func:`viking.vi.make_posterior`.
+      :func:`viking.vi.make_posterior`.
 
     References:
       D. C.-L. Fong and M. A. Saunders, "LSMR: An iterative algorithm
@@ -406,7 +407,9 @@ def projection_kernel_lsmr(
             apply_fn_at_x, matvec, vecmat = _prepare_matvec_vecmat(
                 apply_fn, unflatten_fn, x, loss_fn, y
             )
-            projection_fn = matfree.lstsq.lsmr(custom_vjp=custom_vjp, **lsmr_kwargs)
+            projection_fn = matfree.lstsq.lsmr(
+                custom_vjp=custom_vjp, atol=1e-8, btol=1e-8, **lsmr_kwargs
+            )
 
             def fake_vecmat(v):
                 return matvec(param_vec, v)

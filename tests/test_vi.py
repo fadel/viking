@@ -65,9 +65,7 @@ def test_posterior(projection_fn, n=5, num_samples=3):
         )
 
         samples = vi.sample(posterior, num_samples, x, key=key_sample)
-        y_tilde = jax.vmap(
-            vi.predict_from_samples, in_axes=(None, None, 0), out_axes=1
-        )(posterior, samples, x)
+        y_tilde = vi.predict_on_batch(posterior, samples, x)
         return y_tilde
 
     # Essentially no image component: predictions should be the same
@@ -116,9 +114,7 @@ def test_loss_posterior(projection_fn, is_linearized, n=5, num_samples=3):
         )
 
         samples = vi.sample(posterior, num_samples, x, y, key=key_sample)
-        y_tilde = jax.vmap(
-            vi.predict_from_samples, in_axes=(None, None, 0), out_axes=1
-        )(posterior, samples, x)
+        y_tilde = vi.predict_on_batch(posterior, samples, x)
         losses_tilde = squared_loss(y_tilde, jnp.reshape(y, (1,) + y.shape))
         return losses_tilde
 

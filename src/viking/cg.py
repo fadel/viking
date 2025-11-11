@@ -3,7 +3,7 @@
 [1]: https://github.com/pnkraemer/experiments-lanczos-adjoints/blob/88dd799de5b1f4a1ecf9cec1bfd166fd3f1ba950/src/matfree_extensions/cg.py
 """
 
-from typing import Callable
+from collections.abc import Callable
 
 import jax
 import jax.numpy as jnp

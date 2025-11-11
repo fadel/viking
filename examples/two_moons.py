@@ -38,10 +38,9 @@ def main(args):
     print(
         "Model parameters: {:,d}".format(len(posterior.flatten_fn(posterior.params)[0]))
     )
-    loss_fn = vi.as_elbo_loss(optax.losses.sigmoid_binary_cross_entropy)
     optimizer = optax.nadam(args.lr)
     train_elbo_step = make_train_step(
-        eqx.filter_value_and_grad(loss_fn, has_aux=True),
+        posterior.loss_fn,
         optimizer=optimizer,
         num_mc_samples=args.num_mc_samples,
     )
@@ -52,7 +51,7 @@ def main(args):
         for step_elbo in progressbar_elbo:
             key, subkey = jax.random.split(key)
             try:
-                (loss_value, info), posterior, opt_state = train_elbo_step(
+                posterior, (info, opt_state) = train_elbo_step(
                     posterior,
                     opt_state,
                     x,
@@ -72,7 +71,7 @@ def main(args):
     opt_state = optimizer.init(posterior_params)
     key, key_train = jax.random.split(key)
     posterior, opt_state, key = train(
-        posterior, opt_state, x, y, args.epochs_elbo, key=key_train
+        posterior, opt_state, x, y, args.num_epochs, key=key_train
     )
 
     # %%
@@ -166,9 +165,12 @@ def eqx_flatten(model):
     return vec, lambda v: eqx.combine(unflatten_fn(v), static)
 
 
-def make_train_step(value_and_grad_fn, optimizer, num_mc_samples=1):
+def make_train_step(loss_fn, optimizer, num_mc_samples=1):
+    loss_fn = vi.as_elbo_loss(loss_fn, is_batched=False)
+    value_and_grad_fn = eqx.filter_value_and_grad(loss_fn, has_aux=True)
+
     def train_step(posterior, opt_state, inputs, targets, *, key):
-        out, loss_grad = value_and_grad_fn(
+        (loss_value, info), loss_grad = value_and_grad_fn(
             posterior,
             inputs=inputs,
             targets=targets,
@@ -177,7 +179,7 @@ def make_train_step(value_and_grad_fn, optimizer, num_mc_samples=1):
         )
         updates, opt_state = optimizer.update(loss_grad, opt_state, posterior)
         posterior = eqx.apply_updates(posterior, updates)
-        return out, posterior, opt_state
+        return posterior, (info, opt_state)
 
     return train_step
 
@@ -188,9 +190,7 @@ def plot_posterior_samples(title, ax1, ax2, x, posterior, pos_samples):
     x_eval = jnp.stack((mesh_x, mesh_y)).reshape((2, -1)).T
     y_eval = jax.vmap(posterior.params)(x_eval)
     y_eval_cls = jax.nn.sigmoid(y_eval)
-    logits_samples = jax.vmap(
-        vi.predict_from_samples, in_axes=(None, None, 0), out_axes=-1
-    )(posterior, pos_samples, x_eval)
+    logits_samples = vi.predict_on_batch(posterior, pos_samples, x_eval)
     logits_samples_std = jnp.std(logits_samples, axis=0)
     logits_samples_mean = jnp.mean(logits_samples, axis=0)
     logits_mean_field = logits_samples_mean / jnp.sqrt(
@@ -286,7 +286,7 @@ def parse_args(argv=None):
         help="Number layers in the MLP (excluding input layer)",
     )
     parser.add_argument("--lr", type=float, default=1e-2)
-    parser.add_argument("--epochs-elbo", type=int, default=500)
+    parser.add_argument("--num-epochs", type=int, default=500)
     parser.add_argument(
         "--num-mc-samples",
         type=int,

@@ -48,11 +48,10 @@ def main(args):
         beta=args.beta,
         is_linearized=args.is_linearized,
     )
-    loss_fn = vi.as_elbo_loss(loss_single)
     optimizer = optax.nadam(args.lr)
 
     train_elbo_step = make_train_step(
-        eqx.filter_value_and_grad(loss_fn, has_aux=True),
+        loss_single,
         optimizer=optimizer,
         num_mc_samples=args.num_mc_samples,
     )
@@ -90,9 +89,9 @@ def main(args):
     # Upper confidence bound function
     def ucb(x_pred, posterior_params, pos_samples, kappa=1.0, negate=False, sum=False):
         posterior = eqx.combine(posterior_params, posterior_static)
-        samples = jax.vmap(
-            vi.predict_from_samples, in_axes=(None, None, 0), out_axes=-1
-        )(posterior, pos_samples, x_pred)
+        samples = jax.vmap(vi.predict, in_axes=(None, None, 0), out_axes=-1)(
+            posterior, pos_samples, x_pred
+        )
         y_pred = jnp.mean(samples, axis=0)
         y_std = jnp.std(samples, axis=0)
         acq = y_pred + kappa * y_std
@@ -104,7 +103,7 @@ def main(args):
     # %%
     # Fit on initial selection of points
     posterior, opt_state, key = train(
-        posterior, opt_state, x_sel, y_sel, args.epochs_elbo, key
+        posterior, opt_state, x_sel, y_sel, args.num_epochs, key
     )
     key, subkey = jax.random.split(key)
     pos_samples = vi.sample(
@@ -121,7 +120,7 @@ def main(args):
     fig = plt.figure(figsize=(15, 5))
     plt.plot(x_full, y_full, "-", label="True function", alpha=0.5)
     plt.scatter(x_sel, y_sel, color="red", label="Selected points")
-    samples = jax.vmap(vi.predict_from_samples, in_axes=(None, None, 0), out_axes=-1)(
+    samples = jax.vmap(vi.predict, in_axes=(None, None, 0), out_axes=-1)(
         posterior, pos_samples, x_pred
     )
     lines = plt.plot(
@@ -152,7 +151,7 @@ def main(args):
     # Main BO loop
     for bo_step in range(args.bo_steps):
         posterior, opt_state, key = train(
-            posterior, opt_state, x_sel, y_sel, args.epochs_elbo_bo, key
+            posterior, opt_state, x_sel, y_sel, args.num_epochs_bo, key
         )
         key, subkey = jax.random.split(key)
         pos_samples = vi.sample(
@@ -160,9 +159,9 @@ def main(args):
         )
 
         # Evaluate BNN on grid for plotting
-        samples = jax.vmap(
-            vi.predict_from_samples, in_axes=(None, None, 0), out_axes=-1
-        )(posterior, pos_samples, x_pred)
+        samples = jax.vmap(vi.predict, in_axes=(None, None, 0), out_axes=-1)(
+            posterior, pos_samples, x_pred
+        )
         for i in range(len(lines)):
             lines[i].set_ydata(samples[i])
 
@@ -220,7 +219,10 @@ def select_points(x, y, num: int, key):
     return x[idx, ...], y[idx]
 
 
-def make_train_step(value_and_grad_fn, optimizer, num_mc_samples=1):
+def make_train_step(loss_fn, optimizer, num_mc_samples=1):
+    elbo_loss_fn = vi.as_elbo_loss(loss_fn, is_batched=False)
+    value_and_grad_fn = eqx.filter_value_and_grad(elbo_loss_fn, has_aux=True)
+
     def train_step(posterior, opt_state, inputs, targets, *, key):
         out, loss_grad = value_and_grad_fn(
             posterior,
@@ -270,8 +272,8 @@ def parse_args(argv=None):
         help="Number layers in the MLP (excluding input layer)",
     )
     parser.add_argument("--lr", type=float, default=1e-2)
-    parser.add_argument("--epochs-elbo", type=int, default=2_000)
-    parser.add_argument("--epochs-elbo-bo", type=int, default=100)
+    parser.add_argument("--num-epochs", type=int, default=2_000)
+    parser.add_argument("--num-epochs-bo", type=int, default=100)
     parser.add_argument("--bo-steps", type=int, default=3)
     parser.add_argument(
         "--num-mc-samples",
