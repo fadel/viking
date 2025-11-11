@@ -1,24 +1,25 @@
+import os
+
+import pytest
 import pytest_cases
 
 from examples import (
     bo,
+    mnist,
     sinusoid,
     two_moons,
 )
 
 
-def example_bo():
-    return bo
-
-
-def example_sinusoid():
-    return sinusoid
-
-
-def example_two_moons():
-    return two_moons
-
-
-@pytest_cases.parametrize_with_cases("module", cases=".", prefix="example_")
-def test_example(module):
+@pytest_cases.parametrize("module", (bo, sinusoid, two_moons))
+def test_small_example(module):
     module.main(module.parse_args(["--no-plot"]))
+
+
+@pytest.mark.skipif(
+    "RUNALL" not in os.environ, reason="Time-consuming and needs downloaded data"
+)
+def test_mnist_example():
+    mnist.main(
+        mnist.parse_args(["--num-epochs=2", "--num-eval-samples=1", "--num-hidden=2"])
+    )
