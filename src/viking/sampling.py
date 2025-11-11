@@ -1,47 +1,9 @@
-from typing import Callable
+import functools as ft
+from collections.abc import Iterable
 
 import jax
 import jax.numpy as jnp
 import scipy as sp
-from tqdm import tqdm
-
-
-def make_output_sampler(
-    apply_fn: Callable, unflatten_fn: Callable, is_linearized: bool = False
-):
-    # Wraps `apply_fn` in a calling convention used for both
-    # linearised predictions or regular predictions.
-    def linearized_apply_fn(param_mean, p, x_eval):
-        def apply_at_param(p):
-            return apply_fn(unflatten_fn(p), x_eval)
-
-        outputs = apply_at_param(param_mean)
-        _, lin_outputs = jax.jvp(apply_at_param, (param_mean,), (p - param_mean,))
-        return outputs + lin_outputs
-
-    if is_linearized:
-        _apply_fn = linearized_apply_fn
-    else:
-        _apply_fn = lambda _, p, x: apply_fn(unflatten_fn(p), x)
-
-    def sample_outputs(
-        x_eval,
-        param_mean,
-        image_samples,
-        kernel_samples,
-        log_scale_kernel,
-        log_scale_image,
-    ):
-        posterior_samples = (
-            param_mean
-            + jnp.exp(log_scale_kernel) * kernel_samples
-            + jnp.exp(log_scale_image) * image_samples
-        )
-        return jax.vmap(_apply_fn, in_axes=(None, 0, None))(
-            param_mean, posterior_samples, x_eval
-        )
-
-    return sample_outputs
 
 
 def normal_spherical_sample(key, num_samples, num_dims, end=1.0):
@@ -130,81 +92,34 @@ def _from_hypersphere(z):
     return x
 
 
-def make_alternating_projections(loader, projection: Callable):
-    """Returns a function that calls the `projection` function
-    (returned from `projection_kernel_ggn` or
-    `projection_kernel_param_to_loss`) successively over mini-batches
-    from `loader`, starting from random samples and ending up with an
-    approximation of the projection on the full data [1].
+# NOTE: Will be VERY slow without @jax.jit
+@ft.partial(jax.jit, static_argnames=("projection_fn",))
+def _projection_iter(projection_fn, param_vec, samples, batch_x, batch_y=None):
+    project_onto_kernel = projection_fn(param_vec, batch_x, batch_y)
+    return jax.vmap(project_onto_kernel)(samples)
 
-    [1] https://arxiv.org/abs/2410.16901
 
+def alternating_projections(
+    posterior,
+    iso_samples: jax.Array,
+    loader: Iterable,
+):
+    """Projects `iso_samples` onto the kernel of the GGN of the
+    parameters within `posterior` successively over mini-batches taken from
+    `loader`, ending up with an approximation of the projection on the
+    full data [1].
+
+    Args:
+      posterior: A :class:`KernelImagePosterior` object
+      iso_samples: The samples from a standard Gaussian to be projected
+      loader: Iterable that yields a mini-batch of data at every iteration
+
+    .. [1] https://arxiv.org/abs/2410.16901
     """
-
-    def project_batch(i, batch_carry):
-        param_nn, carry_kernel_samples = batch_carry
-        batch_x, batch_y = loader.dyn_batch(i)
-        est_UUt_kernel = projection(param_nn, batch_x, batch_y)
-        batch_kernel_samples, _ = jax.vmap(est_UUt_kernel)(carry_kernel_samples)
-        return param_nn, batch_kernel_samples
-
-    def projection_iter(_, iter_carry):
-        return jax.lax.fori_loop(0, len(loader), project_batch, iter_carry)
-
-    def alt_projections(param_nn, iso_samples, num_iter):
-        _, batch_kernel_samples = jax.lax.fori_loop(
-            0, num_iter, projection_iter, (param_nn, iso_samples)
+    param_vec, _ = posterior.flatten_fn(posterior.params)
+    kernel_samples = iso_samples
+    for x, y in loader:
+        kernel_samples, _ = _projection_iter(
+            posterior._project, param_vec, kernel_samples, x, y
         )
-        return batch_kernel_samples
-
-    return alt_projections
-
-
-def make_alternating_projections_from_iterator(loader, projection: Callable):
-    """Same as `make_alternating_projections`, but assumes loader is a
-    regular iterable.
-
-    """
-
-    # This will be VERY slow without jax.jit()
-    @jax.jit
-    def projection_iter(param_nn, samples, batch_x, batch_y):
-        est_UUt_kernel = projection(param_nn, batch_x, batch_y)
-        samples, _ = jax.vmap(est_UUt_kernel)(samples)
-        return samples
-
-    def alt_projections(param_nn, iso_samples, num_iter):
-        kernel_samples = iso_samples
-        for _ in range(num_iter):
-            for batch in loader:
-                kernel_samples = projection_iter(
-                    param_nn, kernel_samples, batch["image"], batch["label"]
-                )
-        return kernel_samples
-
-    return alt_projections
-
-
-def make_state_alternating_projections_from_iterator(loader, projection: Callable):
-    """Same as `make_alternating_projections`, but assumes loader is a
-    regular iterable and uses a Flax-like model state.
-
-    """
-
-    # This will be VERY slow without jax.jit()
-    @jax.jit
-    def projection_iter(state, samples, batch_x, batch_y):
-        est_UUt_kernel, *_ = projection(state.params, state, batch_x, batch_y)
-        samples, _ = jax.vmap(est_UUt_kernel)(samples)
-        return samples
-
-    def alt_projections(state, iso_samples, num_iter):
-        kernel_samples = iso_samples
-        for _ in range(num_iter):
-            for batch in tqdm(loader, desc="Projecting"):
-                kernel_samples = projection_iter(
-                    state, kernel_samples, batch["image"], batch["label"]
-                )
-        return kernel_samples
-
-    return alt_projections
+    return kernel_samples
