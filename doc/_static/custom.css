@@ -20,6 +20,7 @@
     :root {
         --text-color: #333;
         --text-secondary-color: #999;
+        --text-faded-color: #bbb;
         --background-color: #eee;
         --background-faded-color: #ddd;
         --background-intense-color: #ccc;
@@ -32,6 +33,7 @@
     :root {
         --text-color: #ddd;
         --text-secondary-color: #999;
+        --text-faded-color: #666;
         --background-color: #111;
         --background-faded-color: #222;
         --background-intense-color: #333;
@@ -125,7 +127,7 @@ form input[type="text"] {
 }
 
 div.footer {
-    color: var(--text-secondary-color);
+    color: var(--text-faded-color);
     text-align: right;
 }
 
@@ -166,10 +168,6 @@ div.highlight {
     padding: 1rem;
 }
 
-em.property {
-    opacity: 0.5;
-}
-
 dl.class > dt.sig,
 dl.function > dt.sig {
     background-color: var(--background-faded-color);
@@ -182,8 +180,6 @@ dl.class > dt.sig { border-left-color: var(--green); }
 dl.function > dt.sig { border-left-color: var(--blue); }
 
 dl.attribute > dt.sig {
-    background-color: var(--background-faded-color);
-    border-left: 0.25rem solid var(--background-intense-color);
     padding-left: 0.5rem;
 }
 
