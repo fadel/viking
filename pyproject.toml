@@ -60,3 +60,14 @@ docstring-code-line-length = "dynamic"
 extend-select = ["I"]
 # Ignore E731 (Do not assign a `lambda` expression, use a `def`)
 ignore = ["E731"]
+
+[tool.pytest.ini_options]
+addopts = [
+    "-v",
+    "--import-mode=importlib",
+]
+# Allows tests to find example code
+pythonpath = ["."]
+testpaths = [
+    "tests",
+]
