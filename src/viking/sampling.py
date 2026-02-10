@@ -118,8 +118,8 @@ def alternating_projections(
     """
     param_vec, _ = posterior.flatten_fn(posterior.params)
     kernel_samples = iso_samples
-    for x, y in loader:
+    for batch in loader:
         kernel_samples, _ = _projection_iter(
-            posterior._project, param_vec, kernel_samples, x, y
+            posterior._project, param_vec, kernel_samples, batch["image"], batch["label"]
         )
     return kernel_samples
