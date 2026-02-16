@@ -164,10 +164,6 @@ p.caption > span.caption-text {
     font-weight: bold;
 }
 
-div.highlight {
-    padding: 1rem;
-}
-
 dl.class > dt.sig,
 dl.function > dt.sig {
     background-color: var(--background-faded-color);
@@ -249,6 +245,11 @@ p.admonition-title {
 div.highlight {
     border: 0.1rem solid var(--background-faded-color);
     background-color: var(--background-color);
+    padding: 1rem;
+}
+
+div.highlight pre {
+    font-size: 1.2em;
 }
 
 /* Comment-related */
@@ -307,4 +308,47 @@ table.indextable tr.cap {
         min-width: 15em;
         border-right: 1px solid var(--background-intense-color);
     }
+}
+
+/* sphinx-gallery */
+.sphx-glr-script-out {
+    display: flex;
+    flex-direction: column;
+}
+
+.sphx-glr-script-out::before {
+    content: "Out";
+    background-color: var(--background-faded-color);
+    color: var(--text-color);
+    display: block;
+    line-height: 1.5;
+    margin-bottom: -0.5rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.sphx-glr-script-out .highlight pre {
+    background-color: transparent;
+}
+
+div.sphx-glr-download-link-note,
+div.sphx-glr-download,
+.sphx-glr-thumbcontainer[tooltip]:hover::before,
+.sphx-glr-thumbcontainer[tooltip]:hover::after {
+    display: none;
+}
+
+.sphx-glr-thumbcontainer {
+    box-shadow: none;
+    -moz-border-radius: 0;
+    -webkit-border-radius: 0;
+    border-radius: 0;
+    background-color: var(--background-faded-color);
+    border: 1px solid var(--background-intense-color);
+    color: var(--link-color);
+    text-decoration: underline;
+}
+
+.sphx-glr-thumbcontainer:hover {
+    border-color: var(--link-hover-color);
+    color: var(--link-hover-color);
 }

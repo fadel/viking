@@ -1,4 +1,9 @@
 # Configuration file for Sphinx
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(__file__))
+
 project = "VIKING"
 copyright = "2025, VIKING authors"
 author = "VIKING authors"
@@ -7,6 +12,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
+    "sphinx_gallery.gen_gallery",
 ]
 templates_path = ["_templates"]
 exclude_patterns = []
@@ -16,6 +22,22 @@ intersphinx_mapping = {
     "jax": ("https://docs.jax.dev/en/latest/", None),
     "matfree": ("https://pnkraemer.github.io/matfree/", None),
     "python": ("https://docs.python.org/3/", None),
+}
+
+
+sphinx_gallery_conf = {
+    "default_thumb_file": "doc/thumbnail-code.png",
+    "download_all_examples": False,
+    "examples_dirs": ["../examples"],
+    "filename_pattern": ".py",
+    "gallery_dirs": ["tutorials"],
+    "ignore_pattern": "mnist",
+    "image_scrapers": ("sphinxext.matplotlib_svg_scraper",),
+    "reference_url": {
+        "viking": None,
+    },
+    "remove_config_comments": True,
+    "show_signature": False,
 }
 
 # Options for HTML output

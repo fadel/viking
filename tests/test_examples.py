@@ -2,18 +2,12 @@ import os
 
 import pytest
 import pytest_cases
+import matplotlib
+import warnings
 
-from examples import (
-    bo,
-    mnist,
-    sinusoid,
-    two_moons,
-)
-
-
-@pytest_cases.parametrize("module", (bo, sinusoid, two_moons))
-def test_small_example(module):
-    module.main(module.parse_args(["--no-plot"]))
+# NOTE: Examples not listed here should be tested when generating
+# documentation for them
+from examples import mnist
 
 
 @pytest.mark.skipif(
