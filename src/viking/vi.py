@@ -359,7 +359,7 @@ def sample_with_batch(
     
     # Otherwise, we need to use the previous kernel samples for computing the image samples
     # due to the sliding window effect of the noise addition
-    return _make_samples_from_parts(param_vec, state.kernel_samples, kernel_samples, info)
+    return _make_samples_from_parts(param_vec, noisy_samples, kernel_samples, info)
 
 
 def predict(
