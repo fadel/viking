@@ -4,7 +4,7 @@ Variational Inference with Kernel- and Image-spaces of numerical Gauss--Newton m
 =======================================================================================
 
 This library implements `VIKING`_: Variational Inference with Kernel- and Image-spaces of numerical Gauss--Newton matrices in `JAX`_.
-It allows you to perform Bayesian inference on relatively big models written in any JAX-based framework.
+It allows you to perform approximate Bayesian inference on relatively big models written in any JAX-based framework.
 
 Check out our :doc:`tutorials/index` document for more information on how to use VIKING on different settings.
 

@@ -263,11 +263,11 @@ def make_elbo_state(
     Prepares and returns a new instance of :class:`ELBOState`.
 
     Args:
-      posterior: A :class:`KernelImagePosterior` object
-      opt_state: A :class:`optax.OptState` object
-      num_mc_samples: Number of posterior samples to work with; notice that this means this many copies of the model will be held in memory
-      loader: An :class:`Iterable` object that will be used to perform initial alternating projections on, if provided
-      key: A :class:`jax.random.PRNGKey` object
+      posterior: A :class:`KernelImagePosterior` object.
+      opt_state: A :class:`optax.OptState` object.
+      num_mc_samples: Number of posterior samples to work with; notice that this means this many copies of the model will be held in memory.
+      loader: An :class:`Iterable` object that will be used to perform initial alternating projections on, if provided.
+      key: A :class:`jax.random.PRNGKey` object.
     """
     params_vec, _ = posterior.flatten_fn(posterior.params)
     iso_samples = jax.random.normal(key, (num_mc_samples, len(params_vec)))
@@ -309,11 +309,27 @@ def _make_samples_from_parts(
 def sample(
     posterior: KernelImagePosterior,
     num_samples: int,
-    x: jax.Array, # Expects a full dataset, not a batch
-    y: jax.Array = None, # Expects a full dataset, not a batch
+    x: jax.Array,
+    y: jax.Array = None,
     *,
     key,
 ) -> PosteriorSamples:
+    """
+    Draws samples from the approximate posterior.
+
+    Args:
+      posterior: A :class:`KernelImagePosterior` object with the
+                 current approximate posterior.
+      num_samples: The number of samples to be drawn. It is more
+                   efficient to increase this number than to call this
+                   function multiple times with this value set to 1.
+      x: An array containing the full dataset of inputs.
+      y: An array containing the full dataset of targets/labels.
+      key: A :class:`jax.random.PRNGKey` object.
+
+    Returns:
+      A :class:`PosteriorSamples` object with all drawn samples.
+    """
     param_vec, _ = posterior.flatten_fn(posterior.params)
     iso_samples = jax.random.normal(key, (num_samples, posterior.num_params))
     kernel_projection = posterior._project(param_vec, x, y)
@@ -328,6 +344,24 @@ def sample_with_loader(
     *,
     key,
 ) -> PosteriorSamples:
+    """
+    Draws samples from the approximate posterior using batches via
+    alternating projections. For most larger models or datasets, this
+    is preferred over :func:`sample`.
+
+    Args:
+      posterior: A :class:`KernelImagePosterior` object with the
+                 current approximate posterior.
+      num_samples: The number of samples to be drawn. It is more
+                   efficient to increase this number than to call this
+                   function multiple times with this value set to 1.
+      loader: An :class:`Iterable` that yields a batch of inputs and
+              labels/targets.
+      key: A :class:`jax.random.PRNGKey` object.
+
+    Returns:
+      A :class:`PosteriorSamples` object with all drawn samples.
+    """
     iso_samples = jax.random.normal(key, (num_samples, posterior.num_params))
     kernel_samples = sampling.alternating_projections(posterior, iso_samples, loader)
     param_vec, _ = posterior.flatten_fn(posterior.params)
@@ -342,6 +376,23 @@ def sample_with_batch(
     *,
     key,
 ) -> PosteriorSamples:
+    """
+    Draws samples from the approximate posterior using a single batch.
+    This is only useful for performing stochastic alternating
+    projections. Refer to the paper or the MNIST example for details.
+
+    Args:
+      posterior: A :class:`KernelImagePosterior` object with the
+                 current approximate posterior.
+      state: An :class:`ELBOState` object with auxiliary information
+             for stochastic alternating projections.
+      x: An array containing a mini-batch of inputs.
+      y: An array containing a mini-batch of targets/labels.
+      key: A :class:`jax.random.PRNGKey` object.
+
+    Returns:
+      A :class:`PosteriorSamples` object with all drawn samples.
+    """
     # Eq. (18)
     eta_samples = jax.random.normal(key, state.kernel_samples.shape)
     noisy_samples = (
@@ -355,8 +406,10 @@ def sample_with_batch(
     # If gamma == 1, no noise was added, so we can reuse the original gaussian samples for
     # getting the image samples
     if posterior.gamma == 1.0:
-        return _make_samples_from_parts(param_vec, state.iso_samples, state.kernel_samples, info)
-    
+        return _make_samples_from_parts(
+            param_vec, state.iso_samples, state.kernel_samples, info
+        )
+
     # Otherwise, we need to use the previous kernel samples for computing the image samples
     # due to the sliding window effect of the noise addition
     return _make_samples_from_parts(param_vec, noisy_samples, kernel_samples, info)
@@ -400,7 +453,7 @@ def predict_on_batch(
 ):
     """
     Identical to :func:`predict`, but ``x_eval_batch`` is assumed to
-    be batched.
+    be mini-batched.
 
     Returns:
       The outputs of the model(s) parameterised by ``samples``, with
@@ -432,7 +485,7 @@ def elbo_kldiv(param_vec: jax.Array, log_precision, log_scale_image, *, R, D):
 def as_elbo_loss(loss_fn: Callable, is_batched: bool = True):
     """This wraps a target loss function into the (possibly batched) VIKING ELBO loss.
 
-    The returned *batched* function has signature:
+    The returned *mini-batched* function has signature:
 
 
     .. code:: python
@@ -461,8 +514,8 @@ def as_elbo_loss(loss_fn: Callable, is_batched: bool = True):
 
     Where ``posterior`` is an instance of
     :class:`KernelImagePosterior`; ``state`` is an instance of
-    :class:`ELBOState`; ``inputs`` is a batch of input data;
-    ``targets`` is a batch of output targets; ``key`` is a key
+    :class:`ELBOState`; ``inputs`` is a mini-batch of input data;
+    ``targets`` is a mini-batch of output targets; ``key`` is a key
     generated from :mod:`jax.random` functions; and ``num_mc_samples``
     controls how many posterior samples are drawn to estimate the
     expectation part of the ELBO loss.
