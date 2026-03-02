@@ -309,8 +309,8 @@ def _make_samples_from_parts(
 def sample(
     posterior: KernelImagePosterior,
     num_samples: int,
-    x: jax.Array,
-    y: jax.Array = None,
+    x: jax.Array, # Expects a full dataset, not a batch
+    y: jax.Array = None, # Expects a full dataset, not a batch
     *,
     key,
 ) -> PosteriorSamples:
@@ -351,7 +351,15 @@ def sample_with_batch(
     param_vec, _ = posterior.flatten_fn(posterior.params)
     project_onto_kernel = posterior._project(param_vec, batch_x, batch_y)
     kernel_samples, info = jax.vmap(project_onto_kernel)(noisy_samples)
-    return _make_samples_from_parts(param_vec, state.iso_samples, kernel_samples, info)
+
+    # If gamma == 1, no noise was added, so we can reuse the original gaussian samples for
+    # getting the image samples
+    if posterior.gamma == 1.0:
+        return _make_samples_from_parts(param_vec, state.iso_samples, state.kernel_samples, info)
+    
+    # Otherwise, we need to use the previous kernel samples for computing the image samples
+    # due to the sliding window effect of the noise addition
+    return _make_samples_from_parts(param_vec, noisy_samples, kernel_samples, info)
 
 
 def predict(
